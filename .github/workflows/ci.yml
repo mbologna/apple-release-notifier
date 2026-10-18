@@ -1,0 +1,75 @@
+name: CI
+
+"on":
+  push:
+    branches: ["**"]
+    tags: ["v*.*.*"]
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+  attestations: write
+  security-events: write
+
+jobs:
+  python:
+    uses: mbologna/.github/.github/workflows/python-ci.yml@34ddd5146432411b41591f745437c16515376361 # main
+    with:
+      python_version: "3.14"
+      use_uv: true
+      enable_codecov: false
+    secrets: inherit
+
+  docker:
+    needs: python
+    uses: mbologna/.github/.github/workflows/docker-ci.yml@34ddd5146432411b41591f745437c16515376361 # main
+    with:
+      image_name: apple-release-notifier
+      push_to_dockerhub: true
+      enable_cosign: true
+      enable_release_drafter: true
+    secrets: inherit
+
+  auto-release:
+    if: github.event_name == 'schedule'
+    needs: [docker]
+    # contents: push the tag; actions: dispatch this workflow on it, since a
+    # tag pushed with GITHUB_TOKEN triggers no run of its own.
+    permissions:
+      contents: write
+      actions: write
+    uses: mbologna/.github/.github/workflows/auto-release.yml@34ddd5146432411b41591f745437c16515376361 # main
+    with:
+      strategy: docker
+      image: docker.io/mbologna/apple-release-notifier
+    secrets: inherit
+
+  # Points the Cloud Run job at this commit's image. Terraform owns the job
+  # (schedule, env, state bucket) and ignores the image after the first apply.
+  deploy:
+    needs: [docker]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    uses: mbologna/.github/.github/workflows/gcp-deploy.yml@34ddd5146432411b41591f745437c16515376361 # main
+    with:
+      image_name: apple-release-notifier
+      deploy_type: job
+      deploy_name: apple-release-notifier
+      region: us-central1
+    secrets: inherit
+
+  cache-cleanup:
+    if: github.event_name == 'schedule'
+    uses: mbologna/.github/.github/workflows/cache-cleanup.yml@34ddd5146432411b41591f745437c16515376361 # main
+    with:
+      max_age_days: 7
+    permissions:
+      actions: write
