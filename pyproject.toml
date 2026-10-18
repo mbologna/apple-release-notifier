@@ -1,6 +1,6 @@
 [project]
 name = "apple-release-notifier"
-version = "1.0.0"
+version = "1.0.1"
 description = "Telegram notifications for new iOS and macOS releases from Apple's developer feed"
 readme = "README.md"
 license = "MIT"

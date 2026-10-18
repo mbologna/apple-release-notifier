@@ -31,7 +31,7 @@ can't be lost, and isn't sent twice when a run times out halfway through.
 docker run --rm \
   -e TELEGRAM_BOT_TOKEN=123:abc -e TELEGRAM_CHAT_ID=-100123 \
   -v "$PWD/state:/state" \
-  docker.io/mbologna/apple-release-notifier:1.0.0
+  docker.io/mbologna/apple-release-notifier:1.0.1
 ```
 
 Images are published to Docker Hub and to `ghcr.io/mbologna/apple-release-notifier`.
