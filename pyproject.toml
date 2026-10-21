@@ -17,6 +17,12 @@ build-backend = "uv_build"
 [dependency-groups]
 dev = ["pytest>=9.0.3", "pytest-cov>=7.1.0", "ruff>=0.8.0"]
 
+[tool.uv]
+# Resolve only releases at least 7 days old, so a compromised release has time
+# to be caught and yanked before it gets locked.
+exclude-newer = "7 days"
+required-version = ">=0.12.12"
+
 [tool.ruff]
 line-length = 120
 target-version = "py312"

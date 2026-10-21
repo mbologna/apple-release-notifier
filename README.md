@@ -42,3 +42,9 @@ Images are published to Docker Hub and to `ghcr.io/mbologna/apple-release-notifi
 uv run pytest
 uv run ruff check . && uv run ruff format --check .
 ```
+
+Dependencies resolve only to releases at least 7 days old (`exclude-newer` in
+`pyproject.toml`), and the image installs exactly what `uv.lock` pins. To take
+a security fix released less than 7 days ago, add a temporary
+`exclude-newer-package` override for that package under `[tool.uv]`, relock,
+and remove the override once the release is 7 days old.
