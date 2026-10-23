@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   python:
-    uses: mbologna/.github/.github/workflows/python-ci.yml@ceb7528f2227aa54fabd34168d25c09724070ec8 # main
+    uses: mbologna/.github/.github/workflows/python-ci.yml@923ac5020fe5fd53ac865cd46d335a02ae0413a3 # main
     with:
       python_version: "3.14"
       use_uv: true
@@ -31,7 +31,7 @@ jobs:
 
   docker:
     needs: python
-    uses: mbologna/.github/.github/workflows/docker-ci.yml@ceb7528f2227aa54fabd34168d25c09724070ec8 # main
+    uses: mbologna/.github/.github/workflows/docker-ci.yml@923ac5020fe5fd53ac865cd46d335a02ae0413a3 # main
     with:
       image_name: apple-release-notifier
       push_to_dockerhub: true
@@ -47,7 +47,7 @@ jobs:
     permissions:
       contents: write
       actions: write
-    uses: mbologna/.github/.github/workflows/auto-release.yml@ceb7528f2227aa54fabd34168d25c09724070ec8 # main
+    uses: mbologna/.github/.github/workflows/auto-release.yml@923ac5020fe5fd53ac865cd46d335a02ae0413a3 # main
     with:
       strategy: docker
       image: docker.io/mbologna/apple-release-notifier
@@ -58,7 +58,7 @@ jobs:
   deploy:
     needs: [docker]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    uses: mbologna/.github/.github/workflows/gcp-deploy.yml@ceb7528f2227aa54fabd34168d25c09724070ec8 # main
+    uses: mbologna/.github/.github/workflows/gcp-deploy.yml@923ac5020fe5fd53ac865cd46d335a02ae0413a3 # main
     with:
       image_name: apple-release-notifier
       deploy_type: job
@@ -68,7 +68,7 @@ jobs:
 
   cache-cleanup:
     if: github.event_name == 'schedule'
-    uses: mbologna/.github/.github/workflows/cache-cleanup.yml@ceb7528f2227aa54fabd34168d25c09724070ec8 # main
+    uses: mbologna/.github/.github/workflows/cache-cleanup.yml@923ac5020fe5fd53ac865cd46d335a02ae0413a3 # main
     with:
       max_age_days: 7
     permissions:
