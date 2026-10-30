@@ -1,12 +1,12 @@
-FROM ghcr.io/astral-sh/uv:0.13.6@sha256:af22a52f5eafef3d78e551599d405c02df61919d18028f0cea8eda93bc9986d0 AS uv
-
 FROM python:3.14.8-alpine@sha256:f6a589d43c42b9e7f7dc67a12d37132491f362859a5d750607710cc56da3bc72 AS build
 
 # Runtime dependencies come from uv.lock, pinned with hashes, so the image gets
 # exactly what was locked and tested instead of a fresh resolution of
 # pyproject.toml. While this uv matches the uv_build range in pyproject.toml, uv
 # builds the wheel with its built-in backend and fetches nothing from PyPI.
-COPY --from=uv /uv /usr/local/bin/uv
+# uv from PyPI, hash-checked (requirements-uv.txt says why).
+COPY requirements-uv.txt /tmp/
+RUN pip install --no-cache-dir --root-user-action=ignore --require-hashes -r /tmp/requirements-uv.txt
 ENV UV_PYTHON_DOWNLOADS=never UV_NO_CACHE=1
 WORKDIR /build
 COPY pyproject.toml uv.lock README.md LICENSE ./
