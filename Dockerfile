@@ -1,4 +1,4 @@
-FROM python:3.14.8-alpine@sha256:f6a589d43c42b9e7f7dc67a12d37132491f362859a5d750607710cc56da3bc72 AS build
+FROM python:3.14.9-alpine@sha256:dbeb11d16bb95c3a7e3c25c842cb9f20cbc8c18f8be0461a4a0dcc861ad386a0 AS build
 
 # Runtime dependencies come from uv.lock, pinned with hashes, so the image gets
 # exactly what was locked and tested instead of a fresh resolution of
@@ -14,7 +14,7 @@ COPY src/ src/
 RUN uv export --frozen --no-dev --no-emit-project --format requirements.txt -o /dist/requirements.txt \
     && uv build --wheel -o /dist
 
-FROM python:3.14.8-alpine@sha256:f6a589d43c42b9e7f7dc67a12d37132491f362859a5d750607710cc56da3bc72
+FROM python:3.14.9-alpine@sha256:dbeb11d16bb95c3a7e3c25c842cb9f20cbc8c18f8be0461a4a0dcc861ad386a0
 
 # Installed from a throwaway directory. The working directory must still exist
 # at runtime: Docker recreates a missing one, Cloud Run fails to start the job.
