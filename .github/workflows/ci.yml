@@ -48,6 +48,8 @@ jobs:
       # this strategy, a push to main only a CVE fix.
       release_strategy: conventional
       # Points the Cloud Run job at the image of each push or manual run
-      # on main that builds one; a docs- or CI-only push deploys nothing. Terraform owns the job (schedule, env, state bucket) and ignores the image after the first apply.
+      # on main that builds one; a docs- or CI-only push deploys nothing.
+      # Terraform owns the job (schedule, env, state bucket) and ignores the
+      # image after the first apply.
       deploy_type: job
     secrets: inherit
