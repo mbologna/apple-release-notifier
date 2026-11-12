@@ -28,8 +28,10 @@ RUN /usr/local/bin/python3 -m pip uninstall -y --root-user-action=ignore pip \
 # Cloud Run fails to start the job.
 WORKDIR /
 
-# Runs as root, like the job's previous stock python image: on Cloud Run the
-# state directory is a Cloud Storage FUSE mount, and a non-root user has not
-# been tested against its permissions yet.
+# Runs as an unprivileged user; the code and virtualenv stay root-owned and
+# read-only to it. The only write is STATE_PATH: on Cloud Run a Cloud Storage
+# FUSE mount, mounted with uid=1000,gid=1000 so its files belong to this user.
+# Elsewhere, mount a directory that uid 1000 can write.
 ENV STATE_PATH=/state/last-guid.txt
+USER 1000:1000
 ENTRYPOINT ["apple-release-notifier"]

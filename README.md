@@ -28,11 +28,16 @@ can't be lost, and isn't sent twice when a run times out halfway through.
 ## Running
 
 ```sh
-docker run --rm \
+mkdir -p state
+docker run --rm --user "$(id -u):$(id -g)" \
   -e TELEGRAM_BOT_TOKEN=123:abc -e TELEGRAM_CHAT_ID=-100123 \
   -v "$PWD/state:/state" \
   docker.io/mbologna/apple-release-notifier:1.0.1
 ```
+
+The image runs as uid 1000, not root, and writes only `STATE_PATH`, so the
+mounted directory must be writable by the container's user: `--user` above
+runs it as you, the owner of `state/`.
 
 Images are published to Docker Hub and to `ghcr.io/mbologna/apple-release-notifier`.
 
