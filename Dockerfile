@@ -22,6 +22,11 @@ COPY --from=build /dist/ /tmp/dist/
 RUN pip install --no-cache-dir --require-hashes -r /tmp/dist/requirements.txt \
     && pip install --no-cache-dir --no-deps --no-index /tmp/dist/*.whl \
     && rm -rf /tmp/dist
+# pip only installs the image's dependencies at build time. Removing it
+# (with the packages it vendors) and ensurepip's bundled pip wheel keeps
+# their CVEs out of the image: nothing runs pip at run time.
+RUN /usr/local/bin/python3 -m pip uninstall -y --root-user-action=ignore pip \
+    && rm -rf /usr/local/lib/python3*/ensurepip
 WORKDIR /
 
 # Runs as root, like the job's previous stock python image: on Cloud Run the
