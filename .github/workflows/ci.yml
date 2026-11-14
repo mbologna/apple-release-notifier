@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   python:
-    uses: mbologna/.github/.github/workflows/python-ci.yml@8afa698d74ff2cbfdb96ee637825753be6a15aa3 # main
+    uses: mbologna/.github/.github/workflows/python-ci.yml@de2007fe3545c975769d756b0008a9789fb0ce96 # main
     with:
       python_version: "3.15"
       enable_codecov: false
