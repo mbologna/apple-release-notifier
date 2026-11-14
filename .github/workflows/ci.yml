@@ -3,7 +3,6 @@ name: CI
 "on":
   push:
     branches: [main]
-    tags: ["v*.*.*"]
   pull_request:
   schedule:
     - cron: "0 6 * * 1"
@@ -11,8 +10,6 @@ name: CI
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  # Never cancel a run on the default branch: it may be releasing, and a cut
-  # release leaves a tag without its Release.
   cancel-in-progress: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
 
 permissions:
@@ -24,32 +21,4 @@ jobs:
     with:
       python_version: "3.15"
       enable_codecov: false
-    secrets: inherit
-
-  docker:
-    needs: python
-    # contents: the release tag and its Release; actions: dispatch the tag
-    # build (a tag pushed with GITHUB_TOKEN triggers no run); the rest:
-    # push, sign and scan the image, and deploy it.
-    permissions:
-      contents: write
-      packages: write
-      id-token: write
-      attestations: write
-      security-events: write
-      actions: write
-    uses: mbologna/.github/.github/workflows/docker-ci.yml@8afa698d74ff2cbfdb96ee637825753be6a15aa3 # main
-    with:
-      image_name: apple-release-notifier
-      # push: the Cloud Run deploy runs the sha-* image of each
-      # main build, so main keeps publishing.
-      publish: push
-      # auto-release runs inside docker-ci: Monday's schedule releases with
-      # this strategy, a push to main only a CVE fix.
-      release_strategy: conventional
-      # Points the Cloud Run job at the image of each push or manual run
-      # on main that builds one; a docs- or CI-only push deploys nothing.
-      # Terraform owns the job (schedule, env, state bucket) and ignores the
-      # image after the first apply.
-      deploy_type: job
     secrets: inherit
