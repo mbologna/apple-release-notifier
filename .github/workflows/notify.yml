@@ -1,0 +1,100 @@
+name: Notify
+
+# Runs the notifier on a schedule. The last-seen guid lives in the Actions
+# cache: each run restores the newest copy and saves its own under a new key.
+# If the cache is ever evicted, the next run treats the feed as already seen
+# (the script's first-run rule), so it never floods the chat.
+#
+# GitHub disables a public repo's schedules after 60 days without activity;
+# Renovate's commits keep this one alive.
+
+"on":
+  schedule:
+    # Hourly at :30, 14:30-23:30 Europe/Rome in both winter (UTC+1) and
+    # summer (UTC+2): cron runs in UTC, and summer adds one early run.
+    - cron: "30 12-22 * * *"
+  workflow_dispatch:
+    inputs:
+      seed_guid:
+        description: >-
+          Start from this guid: overwrite the saved state before the run, as
+          if it were the last item already sent. Leave empty for a normal run.
+        required: false
+        default: ""
+        type: string
+
+# One run at a time, and never cancel one halfway: a second run would
+# restore the state before the first one saved it and send the same items.
+concurrency:
+  group: notify
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  STATE_PATH: ${{ github.workspace }}/.state/last-guid.txt
+
+jobs:
+  notify:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      # Until both secrets exist, the scheduled runs succeed without doing
+      # anything instead of failing every hour.
+      - name: Check the Telegram secrets
+        id: secrets
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "::notice::TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is not set: skipping the run."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.secrets.outputs.configured == 'true'
+
+      - name: Set up uv
+        if: steps.secrets.outputs.configured == 'true'
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.7"
+          python-version: "3.15"
+
+      # restore-keys matches the newest cache whose key starts with the prefix.
+      - name: Restore the state
+        if: steps.secrets.outputs.configured == 'true'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .state/last-guid.txt
+          key: last-guid-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: last-guid-
+
+      - name: Seed the state
+        if: steps.secrets.outputs.configured == 'true' && inputs.seed_guid != ''
+        env:
+          SEED_GUID: ${{ inputs.seed_guid }}
+        run: |
+          mkdir -p "$(dirname "$STATE_PATH")"
+          printf '%s' "$SEED_GUID" > "$STATE_PATH"
+          echo "state seeded with: $SEED_GUID"
+
+      - name: Notify
+        if: steps.secrets.outputs.configured == 'true'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: uv run --locked --no-dev apple-release-notifier
+
+      # Saved even when the run failed: the script records progress after
+      # every item it sends.
+      - name: Save the state
+        if: always() && steps.secrets.outputs.configured == 'true' && hashFiles('.state/last-guid.txt') != ''
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .state/last-guid.txt
+          key: last-guid-${{ github.run_id }}-${{ github.run_attempt }}
