@@ -37,3 +37,6 @@ addopts = "-v --strict-markers"
 
 [tool.coverage.run]
 source = ["apple_release_notifier"]
+
+[tool.coverage.report]
+fail_under = 100
