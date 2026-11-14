@@ -1,5 +1,9 @@
 # apple-release-notifier
 
+> **Archived (2026-11-14).** This project moved into a private repository
+> next to the jobs that download the releases it announced. It no longer
+> runs, and the code stays here for reference.
+
 [![CI](https://github.com/mbologna/apple-release-notifier/actions/workflows/ci.yml/badge.svg)](https://github.com/mbologna/apple-release-notifier/actions/workflows/ci.yml)
 
 Sends a [Telegram](https://core.telegram.org/bots/api) message for every new
